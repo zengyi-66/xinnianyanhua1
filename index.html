@@ -15,32 +15,36 @@
         canvas { display: block; }
         #textCanvas { display: none; }
 
-        /* === UI 界面 === */
+        /* === UI 界面 (修复版：增加滚动条防止按钮被挡住) === */
         #setup-screen {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0, 0, 0, 0.95);
             z-index: 2000;
             display: flex; flex-direction: column;
-            align-items: center; justify-content: center;
+            align-items: center; justify-content: center; /* 默认居中 */
             color: #ffd700;
             transition: opacity 0.5s;
+            overflow-y: auto; /* 关键：允许垂直滚动 */
+            padding: 20px 0;  /* 防止上下贴边 */
         }
         #setup-screen.hidden { opacity: 0; pointer-events: none; }
 
         .setup-title {
-            font-size: 40px; /* 稍微调小适配手机 */
-            margin-bottom: 20px; font-weight: bold;
+            font-size: 40px;
+            margin: 20px 0; font-weight: bold;
             text-shadow: 0 0 25px #ffd700; letter-spacing: 5px;
             font-family: "Microsoft YaHei", serif;
             color: #ffd700;
             text-align: center;
+            flex-shrink: 0; /* 防止标题被压缩 */
         }
 
         .setup-group {
             background: rgba(255, 215, 0, 0.05);
             padding: 15px; border-radius: 15px; border: 1px solid rgba(255, 215, 0, 0.3);
-            width: 90%; max-width: 400px; margin-bottom: 15px; text-align: center;
+            width: 85%; max-width: 400px; margin-bottom: 15px; text-align: center;
+            flex-shrink: 0;
         }
         .setup-label { font-size: 14px; margin-bottom: 10px; display: block; color: #ffe6a0; }
 
@@ -55,17 +59,32 @@
         }
         textarea::placeholder { color: rgba(255, 215, 0, 0.3); }
 
-        /* 按钮容器 */
-        .btn-container {
+        /* === 按钮容器 (修复：确保横排显示) === */
+        .btn-box {
             display: flex;
+            justify-content: center;
             gap: 15px;
             margin-top: 10px;
-            justify-content: center;
+            margin-bottom: 30px; /* 底部留白 */
+            flex-wrap: wrap; /* 屏幕太窄自动换行 */
+            flex-shrink: 0;
         }
 
-        /* 开始按钮 */
+        /* 绿色分享按钮 */
+        #share-btn {
+            padding: 12px 25px;
+            font-size: 16px; color: #fff; 
+            background: linear-gradient(45deg, #07c160, #10ad63); /* 微信绿 */
+            border: none; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 0 15px rgba(7, 193, 96, 0.4);
+            font-weight: bold; 
+            font-family: "Microsoft YaHei";
+            display: flex; align-items: center; gap: 5px;
+        }
+
+        /* 金色开始按钮 */
         #start-btn {
-            padding: 12px 30px;
+            padding: 12px 40px;
             font-size: 18px; color: #000; 
             background: linear-gradient(45deg, #ffd700, #ffec8b, #b8860b);
             border: none; border-radius: 50px; cursor: pointer;
@@ -74,17 +93,9 @@
             font-family: "Microsoft YaHei";
         }
         
-        /* 【新增】生成链接按钮 */
-        #share-btn {
-            padding: 12px 30px;
-            font-size: 18px; color: #fff; 
-            background: linear-gradient(45deg, #09bb07, #4ae048); /* 微信绿 */
-            border: none; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 0 20px rgba(9, 187, 7, 0.4);
-            font-weight: bold; 
-            font-family: "Microsoft YaHei";
-        }
+        button:active { transform: scale(0.95); }
 
+        /* 侧边栏和状态栏 */
         #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
         #sidebar { position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; pointer-events: auto; }
         
@@ -118,25 +129,25 @@
     <div class="setup-title">2025 定制烟花</div>
     
     <div class="setup-group">
-        <span class="setup-label">✍️ 写下祝福，生成链接发给朋友</span>
-        <textarea id="setup-text" placeholder="在此输入祝福语...&#10;例如：张三 祝 李四 新年快乐"></textarea>
+        <span class="setup-label">✍️ 输入祝福语 (每行一句)</span>
+        <textarea id="setup-text" placeholder="祝大家新年快乐&#10;蛇年大吉大利&#10;身体健康 万事如意"></textarea>
     </div>
 
     <div class="setup-group">
         <span class="setup-label">🎵 背景音乐 (可选)</span>
         <div class="file-upload">
-            <span id="music-label">上传 MP3</span>
+            <span id="music-label">📁 上传 MP3</span>
             <input type="file" id="setup-music" accept="audio/*">
         </div>
     </div>
 
-    <div class="btn-container">
-        <button id="share-btn">📋 生成分享链接</button>
-        <button id="start-btn">🚀 直接播放</button>
+    <div class="btn-box">
+        <button id="share-btn">🔗 复制链接送祝福</button>
+        <button id="start-btn">🚀 开始播放</button>
     </div>
     
-    <div style="margin-top:15px; color:#666; font-size:12px;">
-        *点击"生成分享链接"后，直接去微信粘贴即可
+    <div style="color: #666; font-size: 12px; margin-bottom: 20px;">
+        * 点击“复制链接”后，可发送给微信好友
     </div>
 </div>
 
@@ -150,7 +161,7 @@
 </div>
 
 <script>
-    // === 核心参数 ===
+    // === V30 核心配置 ===
     const CONFIG = {
         textBaseHue: 50, textBrightness: 100, gap: 3, 
         textRocketSpeed: 14, ambienceRocketMin: 12, ambienceRocketMax: 20, 
@@ -158,7 +169,7 @@
         rocketWidthText: 8, rocketWidthAmbience: 5, 
         ambienceInterval: 30, partyInterval: 8, launchInterval: 1200 
     };
-    const MAX_PARTICLES = 6000; // 稍微降低粒子数以提高手机流畅度
+    const MAX_PARTICLES = 6000; 
 
     const canvas = document.getElementById('canvas');
     const ctx = canvas.getContext('2d');
@@ -169,7 +180,6 @@
     
     let fireworks = [];
     let particles = [];
-    // 默认播放列表
     const SYSTEM_COUNTDOWN = ['10', '9', '8', '7', '6', '5', '4', '3', '2', '1'];
     const DEFAULT_MSG = ['2025', '蛇年大吉', '新年快乐', '万事如意']; 
     
@@ -195,29 +205,31 @@
         }
     };
 
-    // --- 【新功能】URL 参数读取 ---
-    // 进入页面时，自动检查网址里有没有 ?msg=...
+    // === 【功能】读取 URL 中的 ?msg=... 参数 ===
     function checkUrlParams() {
         const params = new URLSearchParams(window.location.search);
         const msg = params.get('msg');
         if (msg) {
-            // 如果有参数，解码并填入文本框
-            const decodedMsg = decodeURIComponent(msg);
-            document.getElementById('setup-text').value = decodedMsg;
-            // 更新标题提示用户
-            document.querySelector('.setup-title').innerText = "收到一份烟花祝福";
+            try {
+                // 解码并填充到文本框
+                const decodedMsg = decodeURIComponent(msg);
+                document.getElementById('setup-text').value = decodedMsg;
+                // 修改标题让用户知道这是定制的
+                document.querySelector('.setup-title').innerText = "收到一份专属祝福";
+                document.querySelector('.setup-title').style.color = "#ff4d4d"; // 红色标题
+            } catch(e) {
+                console.error("URL解码失败", e);
+            }
         }
     }
-    // 页面加载即运行
     checkUrlParams();
 
-    // --- 粒子与烟花逻辑 (保持 V30 原汁原味) ---
+    // === 烟花核心逻辑 (保留V30原版) ===
     function getTextPoints(text) {
         textCanvas.width = cw;
         textCanvas.height = ch;
         textCtx.clearRect(0, 0, cw, ch);
         
-        // 字体大小智能适配
         let baseSize = Math.min(cw * 0.22, 250); 
         if (text.length > 2) baseSize = Math.min(cw * 0.18, 200);
         if (text.length > 5) baseSize = Math.min(cw * 0.12, 150);
@@ -317,7 +329,7 @@
             this.x = x;
             this.y = y;
             this.coordinates = [];
-            this.coordinateCount = 5; // 减少拖尾坐标数提升性能
+            this.coordinateCount = 5; 
             while(this.coordinateCount--) this.coordinates.push([this.x, this.y]);
             
             this.hue = hue;
@@ -390,7 +402,7 @@
         }
     }
 
-    // --- UI 逻辑 ---
+    // === UI 交互逻辑 ===
     const setupScreen = document.getElementById('setup-screen');
     const setupText = document.getElementById('setup-text');
     const setupMusic = document.getElementById('setup-music');
@@ -410,48 +422,50 @@
     startBtn.addEventListener('click', () => {
         initPlayList();
         if (bgm.src) {
-            bgm.play().catch(e => console.log("需交互播放"));
+            bgm.play().catch(e => console.log("等待交互播放"));
         }
         setupScreen.classList.add('hidden');
         isRunning = true;
         document.getElementById('status').innerText = "✨ 正在播放私人定制烟花 ✨";
     });
-    
-    // --- 【新功能】生成转发链接 ---
+
+    // === 【核心修复】生成并复制链接 ===
     shareBtn.addEventListener('click', () => {
         const text = setupText.value.trim();
         if (!text) {
-            alert("请先输入一些祝福语！");
+            alert("请先输入一些祝福语再分享！");
             return;
         }
         
-        // 1. 获取当前网址的基础部分 (去掉之前的问号参数)
+        // 1. 生成链接
         const baseUrl = window.location.origin + window.location.pathname;
-        
-        // 2. 编码用户输入的文字
         const encodedMsg = encodeURIComponent(text);
-        
-        // 3. 拼接新链接
         const shareUrl = `${baseUrl}?msg=${encodedMsg}`;
         
-        // 4. 复制到剪贴板
-        if (navigator.clipboard && window.isSecureContext) {
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                alert("✅ 链接已复制！\n\n请直接去微信对话框粘贴，发送给朋友。\n朋友点开就能看到你写的字啦！");
-            });
-        } else {
-            // 兼容旧浏览器或非HTTPS环境
-            const textArea = document.createElement("textarea");
-            textArea.value = shareUrl;
-            document.body.appendChild(textArea);
-            textArea.select();
-            try {
-                document.execCommand('copy');
-                alert("✅ 链接已复制！\n\n请直接去微信粘贴发送给朋友。");
-            } catch (err) {
-                prompt("复制失败，请手动复制以下链接发送：", shareUrl);
+        // 2. 复制逻辑
+        const copyToClipboard = (str) => {
+            const el = document.createElement('textarea');
+            el.value = str;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+        };
+
+        try {
+            if (navigator.clipboard && window.isSecureContext) {
+                 navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert("✅ 链接已复制成功！\n\n快去微信发送给朋友吧！\n朋友点开就能看到：" + text);
+                 }, () => {
+                    copyToClipboard(shareUrl);
+                    alert("✅ 链接已复制！\n\n请直接粘贴发给朋友。");
+                 });
+            } else {
+                copyToClipboard(shareUrl);
+                alert("✅ 链接已复制成功！\n\n请直接去微信粘贴发送给朋友。");
             }
-            document.body.removeChild(textArea);
+        } catch (err) {
+            prompt("复制自动失败，请长按下方链接复制：", shareUrl);
         }
     });
 
@@ -471,9 +485,6 @@
         currentIndex = 0;
         isFinished = false;
         if (rawText) {
-            // 如果只有一行，就只放这一行；多行则按行播放
-            // 智能判断：如果用户没写数字倒计时，我们是否强制加？
-            // V30逻辑：如果第一行不是数字，则加上系统倒计时
             let userList = rawText.split('\n').filter(t => t.trim() !== '');
             if (isNaN(parseInt(userList[0]))) {
                 playList = SYSTEM_COUNTDOWN.concat(userList);
@@ -485,7 +496,6 @@
         }
     }
 
-    // --- 动画循环 ---
     function loop() {
         requestAnimationFrame(loop);
         ctx.globalCompositeOperation = 'source-over';
@@ -508,7 +518,7 @@
         tick++;
         if (!isFinished) {
             let waitTime = CONFIG.launchInterval;
-            if (currentIndex >= 10) waitTime += 900; // 倒计时结束后稍微停顿，展示大字
+            if (currentIndex >= 10) waitTime += 900; 
 
             if (now - lastTextLaunchTime > waitTime) { 
                 if (currentIndex < playList.length) {
@@ -517,17 +527,15 @@
                     currentIndex++;
                     lastTextLaunchTime = now;
                 } else {
-                    isFinished = true; // 播放完毕，进入自由模式
+                    isFinished = true; 
                 }
             }
             if (tick >= CONFIG.ambienceInterval) {
-                // 环境烟花 (保持画面热闹)
                 fireworks.push(new Firework(null, random(cw * 0.05, cw * 0.15)));
                 fireworks.push(new Firework(null, random(cw * 0.85, cw * 0.95)));
                 tick = 0;
             }
         } else {
-            // 自由模式
             if (tick >= CONFIG.partyInterval) {
                 let count = Math.floor(random(2, 4));
                 for(let k=0; k<count; k++){
@@ -540,7 +548,7 @@
 
     loop();
 
-    // --- 鼠标/触控交互 (修复电脑端点不动的问题) ---
+    // === 交互支持 (修复电脑鼠标) ===
     function handleInput(x, y) {
         if (!isRunning) return; 
         fireworks.push(new Firework(null, x)); 
