@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>新年烟花秀 2026</title>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #000;
+            font-family: "Microsoft YaHei", Arial, sans-serif;
+            touch-action: none; /* 防止手机端双击缩放 */
+        }
+        canvas { display: block; }
+        #textCanvas { display: none; }
+
+        /* === UI 界面 === */
+        #setup-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            z-index: 2000;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+            color: #ffd700;
+            transition: opacity 0.5s;
+        }
+        #setup-screen.hidden { opacity: 0; pointer-events: none; }
+
+        .setup-title {
+            font-size: 8vw; /* 响应式字体 */
+            margin-bottom: 20px; font-weight: bold;
+            text-shadow: 0 0 25px #ffd700; letter-spacing: 5px;
+            font-family: "Microsoft YaHei", serif;
+            color: #ffd700;
+            text-align: center;
+        }
+
+        .setup-group {
+            background: rgba(255, 215, 0, 0.05);
+            padding: 20px; border-radius: 15px; border: 1px solid rgba(255, 215, 0, 0.3);
+            width: 80%; max-width: 400px; margin-bottom: 20px; text-align: center;
+        }
+        .setup-label { font-size: 14px; margin-bottom: 10px; display: block; color: #ffe6a0; }
+
+        textarea {
+            width: 90%;
+            height: 100px;
+            background: rgba(0, 0, 0, 0.6); border: 1px solid #ffd700;
+            color: #ffd700; font-size: 16px; padding: 10px;
+            border-radius: 5px;
+            outline: none; resize: none;
+            font-family: "Microsoft YaHei"; text-align: center;
+        }
+        textarea::placeholder { color: rgba(255, 215, 0, 0.3); }
+
+        /* 按钮容器 */
+        .btn-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .main-btn {
+            padding: 12px 30px;
+            font-size: 18px; color: #000; 
+            background: linear-gradient(45deg, #ffd700, #ffec8b, #b8860b);
+            border: none; border-radius: 50px; cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
+            font-weight: bold;
+            transition: transform 0.2s;
+            font-family: "Microsoft YaHei";
+            white-space: nowrap;
+        }
+        .main-btn:active { transform: scale(0.95); }
+        
+        /* 分享按钮特别样式 */
+        #share-btn {
+            background: linear-gradient(45deg, #00ffff, #e0ffff, #008b8b);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+        }
+
+        #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
+        #sidebar { position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; pointer-events: auto; }
+        
+        .mini-btn {
+            width: 40px; height: 40px; border-radius: 50%;
+            background: rgba(0,0,0,0.6); border: 1px solid #ffd700;
+            color: #ffd700; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; font-size: 18px; transition: 0.3s; user-select: none;
+        }
+        .mini-btn:hover { background: #ffd700; color: #000; box-shadow: 0 0 15px #ffd700; }
+        
+        #status {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            color: rgba(255, 215, 0, 0.6); font-size: 12px;
+            pointer-events: none;
+        }
+        
+        .file-upload { 
+            position: relative; display: inline-block; cursor: pointer; 
+            color: #ffe6a0; border: 1px solid #ffd700; padding: 8px 20px; border-radius: 20px; 
+            transition: 0.3s; font-size: 14px;
+        }
+        .file-upload input { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+
+        /* 横屏提示遮罩 (仅在竖屏且播放时显示，可选) */
+        #portrait-hint {
+            display: none;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #000; z-index: 9999;
+            color: #ffd
