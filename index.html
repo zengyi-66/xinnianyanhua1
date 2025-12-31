@@ -2,15 +2,15 @@
 <html lang="zh-CN">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>新年烟花秀 2026</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <title>New Year 2026 Final Show</title>
     <style>
         body {
             margin: 0;
             overflow: hidden;
             background: #000;
             font-family: "Microsoft YaHei", Arial, sans-serif;
-            touch-action: none; /* 防止手机端双击缩放 */
+            touch-action: none; /* 防止手机双击放大 */
         }
         canvas { display: block; }
         #textCanvas { display: none; }
@@ -29,18 +29,17 @@
         #setup-screen.hidden { opacity: 0; pointer-events: none; }
 
         .setup-title {
-            font-size: 8vw; /* 响应式字体 */
+            font-size: 60px;
             margin-bottom: 20px; font-weight: bold;
             text-shadow: 0 0 25px #ffd700; letter-spacing: 5px;
             font-family: "Microsoft YaHei", serif;
             color: #ffd700;
-            text-align: center;
         }
 
         .setup-group {
             background: rgba(255, 215, 0, 0.05);
             padding: 20px; border-radius: 15px; border: 1px solid rgba(255, 215, 0, 0.3);
-            width: 80%; max-width: 400px; margin-bottom: 20px; text-align: center;
+            width: 400px; max-width: 90%; margin-bottom: 20px; text-align: center;
         }
         .setup-label { font-size: 14px; margin-bottom: 10px; display: block; color: #ffe6a0; }
 
@@ -48,67 +47,452 @@
             width: 90%;
             height: 100px;
             background: rgba(0, 0, 0, 0.6); border: 1px solid #ffd700;
-            color: #ffd700; font-size: 16px; padding: 10px;
+            color: #ffd700; font-size: 18px; padding: 10px;
             border-radius: 5px;
             outline: none; resize: none;
             font-family: "Microsoft YaHei"; text-align: center;
         }
         textarea::placeholder { color: rgba(255, 215, 0, 0.3); }
 
-        /* 按钮容器 */
-        .btn-container {
-            display: flex;
-            gap: 15px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .main-btn {
-            padding: 12px 30px;
-            font-size: 18px; color: #000; 
+        #start-btn {
+            padding: 15px 70px;
+            font-size: 24px; color: #000; 
             background: linear-gradient(45deg, #ffd700, #ffec8b, #b8860b);
             border: none; border-radius: 50px; cursor: pointer;
-            box-shadow: 0 0 20px rgba(255, 215, 0, 0.4);
-            font-weight: bold;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.6);
+            font-weight: bold; margin-top: 20px;
             transition: transform 0.2s;
             font-family: "Microsoft YaHei";
-            white-space: nowrap;
         }
-        .main-btn:active { transform: scale(0.95); }
-        
-        /* 分享按钮特别样式 */
-        #share-btn {
-            background: linear-gradient(45deg, #00ffff, #e0ffff, #008b8b);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
-        }
+        #start-btn:hover { transform: scale(1.05); box-shadow: 0 0 50px rgba(255, 215, 0, 0.8); }
 
         #ui-layer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 100; pointer-events: none; }
         #sidebar { position: absolute; top: 20px; right: 20px; display: flex; gap: 15px; pointer-events: auto; }
         
         .mini-btn {
-            width: 40px; height: 40px; border-radius: 50%;
+            width: 45px;
+            height: 45px; border-radius: 50%;
             background: rgba(0,0,0,0.6); border: 1px solid #ffd700;
             color: #ffd700; display: flex; align-items: center; justify-content: center;
-            cursor: pointer; font-size: 18px; transition: 0.3s; user-select: none;
+            cursor: pointer;
+            font-size: 20px; transition: 0.3s;
+            user-select: none;
         }
         .mini-btn:hover { background: #ffd700; color: #000; box-shadow: 0 0 15px #ffd700; }
         
         #status {
-            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            position: absolute;
+            bottom: 20px; width: 100%; text-align: center;
             color: rgba(255, 215, 0, 0.6); font-size: 12px;
-            pointer-events: none;
         }
         
         .file-upload { 
-            position: relative; display: inline-block; cursor: pointer; 
-            color: #ffe6a0; border: 1px solid #ffd700; padding: 8px 20px; border-radius: 20px; 
-            transition: 0.3s; font-size: 14px;
+            position: relative;
+            display: inline-block; cursor: pointer; 
+            color: #ffe6a0; border: 1px solid #ffd700; padding: 8px 30px; border-radius: 20px; 
+            transition: 0.3s;
         }
+        .file-upload:hover { background: rgba(255, 215, 0, 0.2); }
         .file-upload input { position: absolute; left: 0; top: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
+    </style>
+</head>
+<body>
 
-        /* 横屏提示遮罩 (仅在竖屏且播放时显示，可选) */
-        #portrait-hint {
-            display: none;
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #000; z-index: 9999;
-            color: #ffd
+<canvas id="canvas"></canvas>
+<canvas id="textCanvas"></canvas>
+<audio id="bgm" loop hidden></audio>
+
+<div id="setup-screen">
+    <div class="setup-title">新年烟花秀</div>
+    
+    <div class="setup-group">
+        <span class="setup-label">自定义祝福语 (智能模式)</span>
+        <textarea id="setup-text" placeholder="只输入文字 -> 自动加10秒倒计时&#10;输入数字开头 -> 按你的顺序播放"></textarea>
+    </div>
+
+    <div class="setup-group">
+        <span class="setup-label">背景音乐</span>
+        <div class="file-upload">
+            <span id="music-label">🎵 上传 MP3</span>
+            <input type="file" id="setup-music" accept="audio/*">
+        </div>
+    </div>
+
+    <button id="start-btn">开启2026</button>
+</div>
+
+<div id="ui-layer">
+    <div id="sidebar">
+        <div class="mini-btn" title="全屏开关" onclick="toggleFullscreen()">⛶</div>
+        <div class="mini-btn" title="编辑" onclick="showSetup()">✎</div>
+        <div class="mini-btn" title="重播" onclick="replay()">↻</div>
+    </div>
+    <div id="status"></div>
+</div>
+
+<script>
+    // === V30.0 最终典藏版核心参数 ===
+    const CONFIG = {
+        textBaseHue: 50,        // 金色
+        textBrightness: 100,    
+        gap: 3,                 // 性能平衡点
+        textRocketSpeed: 14,
+        ambienceRocketMin: 12, 
+        ambienceRocketMax: 20, 
+        textFriction: 0.90,     
+        gravity: 0.04,
+        trail: 0.12,            
+        rocketWidthText: 8,     
+        rocketWidthAmbience: 5, 
+        ambienceInterval: 30,
+        partyInterval: 8,
+        launchInterval: 1200 
+    };
+    const MAX_PARTICLES = 8000;
+
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
+    const textCanvas = document.getElementById('textCanvas');
+    const textCtx = textCanvas.getContext('2d');
+    let cw = window.innerWidth;
+    let ch = window.innerHeight;
+    
+    let fireworks = [];
+    let particles = [];
+    const SYSTEM_COUNTDOWN = ['10', '9', '8', '7', '6', '5', '4', '3', '2', '1'];
+    const DEFAULT_MSG = ['新年快乐', '万事如意', '身体健康', '龙年大吉'];
+    let playList = [];
+    let currentIndex = 0;
+    let lastTextLaunchTime = 0;
+    let tick = 0;
+    let isRunning = false;
+    let isFinished = false;
+
+    function resize() {
+        cw = canvas.width = window.innerWidth;
+        ch = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    window.toggleFullscreen = function() {
+        if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen().catch(err => console.log(err));
+        } else {
+            if (document.exitFullscreen) document.exitFullscreen();
+        }
+    };
+
+    function getTextPoints(text) {
+        textCanvas.width = cw;
+        textCanvas.height = ch;
+        textCtx.clearRect(0, 0, cw, ch);
+        
+        // 【优化】限制电脑端字体最大值，防止文字过大
+        let baseSize = Math.min(cw * 0.22, 250); 
+        if (text.length > 2) baseSize = Math.min(cw * 0.18, 200);
+        if (text.length > 5) baseSize = Math.min(cw * 0.12, 150);
+        if (text.length > 8) baseSize = Math.min(cw * 0.09, 100);
+        
+        textCtx.font = "bold " + baseSize + "px Arial, sans-serif";
+        textCtx.fillStyle = '#ffffff';
+        textCtx.textAlign = 'center';
+        textCtx.textBaseline = 'middle';
+        textCtx.fillText(text, cw / 2, ch / 3); 
+
+        let imgData = textCtx.getImageData(0, 0, cw, ch).data;
+        let points = [];
+        let dynamicGap = CONFIG.gap;
+        
+        if (text.length > 4) dynamicGap = 3; 
+        if (text.length > 8) dynamicGap = 4;
+        
+        for (let y = 0; y < ch; y += dynamicGap) {
+            for (let x = 0; x < cw; x += dynamicGap) {
+                let i = (y * cw + x) * 4;
+                if (imgData[i + 3] > 128) { 
+                    points.push({x: x, y: y});
+                }
+            }
+        }
+        return points;
+    }
+
+    function random(min, max) { return Math.random() * (max - min) + min; }
+    function getDistance(x1, y1, x2, y2) { return Math.sqrt(Math.pow(x1-x2, 2) + Math.pow(y1-y2, 2)); }
+
+    class Firework {
+        constructor(text, startX) {
+            // 支持指定X轴位置发射（用于鼠标交互）
+            if (startX !== undefined) this.x = startX;
+            else this.x = random(cw * 0.1, cw * 0.9);
+            
+            this.y = ch;
+            this.tx = this.x + random(-20, 20);
+            this.ty = random(ch * 0.1, ch * 0.35); 
+            
+            if (text) {
+                this.x = cw / 2;
+                this.tx = cw / 2;
+                this.ty = ch / 3;
+                this.speed = CONFIG.textRocketSpeed;
+                this.textPayload = text;
+                this.isTextRocket = true;
+                this.lineWidth = CONFIG.rocketWidthText;
+                this.hue = random(CONFIG.textBaseHue - 5, CONFIG.textBaseHue + 5);
+                this.brightness = CONFIG.textBrightness;
+            } else {
+                this.speed = random(CONFIG.ambienceRocketMin, CONFIG.ambienceRocketMax);
+                this.textPayload = null;
+                this.isTextRocket = false;
+                this.lineWidth = random(3, 6); 
+                this.hue = random(0, 360);
+                this.brightness = random(50, 80);
+                this.explosionType = Math.floor(random(0, 3));
+            }
+
+            this.distToTarget = getDistance(this.x, this.y, this.tx, this.ty);
+            this.distTraveled = 0;
+            this.coordinates = [];
+            this.coordinateCount = 3;
+            while(this.coordinateCount--) this.coordinates.push([this.x, this.y]);
+            this.angle = Math.atan2(this.ty - this.y, this.tx - this.x);
+            this.acceleration = 1.015;
+        }
+
+        update(index) {
+            this.coordinates.pop();
+            this.coordinates.unshift([this.x, this.y]);
+            this.speed *= this.acceleration;
+            let vx = Math.cos(this.angle) * this.speed;
+            let vy = Math.sin(this.angle) * this.speed;
+            this.distTraveled = getDistance(this.x, this.y, this.x + vx, this.y + vy) + this.distTraveled;
+            
+            if (this.distTraveled >= this.distToTarget) {
+                createParticles(this.tx, this.ty, this.textPayload, this.hue, this.explosionType);
+                fireworks.splice(index, 1);
+            } else {
+                this.x += vx;
+                this.y += vy;
+            }
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+            ctx.lineTo(this.x, this.y);
+            ctx.lineWidth = this.lineWidth;
+            ctx.strokeStyle = `hsl(${this.hue}, 100%, 60%)`;
+            ctx.stroke();
+            ctx.lineWidth = 1;
+        }
+    }
+
+    class Particle {
+        constructor(x, y, hue, type, targetX, targetY, isNumber = false) {
+            this.x = x;
+            this.y = y;
+            this.coordinates = [];
+            this.coordinateCount = 6;
+            while(this.coordinateCount--) this.coordinates.push([this.x, this.y]);
+            
+            this.hue = hue;
+            this.alpha = 1;
+            this.type = type;
+
+            if (type === 'text') {
+                this.x = targetX;
+                this.y = targetY;
+                this.vx = random(-0.8, 0.8);
+                this.vy = random(-0.8, 0.8);
+                this.friction = CONFIG.textFriction;
+                this.gravity = 0.03;
+                this.decay = isNumber ? random(0.025, 0.035) : random(0.010, 0.015);
+                this.brightness = CONFIG.textBrightness;
+            } else {
+                let angle = random(0, Math.PI * 2);
+                let speed = random(3, 18); 
+                this.vx = Math.cos(angle) * speed;
+                this.vy = Math.sin(angle) * speed;
+                this.friction = 0.96;
+                this.gravity = 0.04;
+                this.decay = random(0.01, 0.02);
+                this.brightness = random(50, 80);
+            }
+        }
+
+        update(index) {
+            this.coordinates.pop();
+            this.coordinates.unshift([this.x, this.y]);
+            this.vx *= this.friction;
+            this.vy *= this.friction;
+            this.vy += this.gravity;
+            this.x += this.vx;
+            this.y += this.vy;
+            this.alpha -= this.decay;
+            if (this.alpha <= this.decay) particles.splice(index, 1);
+        }
+
+        draw() {
+            ctx.beginPath();
+            ctx.moveTo(this.coordinates[this.coordinates.length - 1][0], this.coordinates[this.coordinates.length - 1][1]);
+            ctx.lineTo(this.x, this.y);
+            ctx.lineWidth = (this.type === 'text') ? 4 : 3;
+            
+            if (this.type === 'text') {
+                ctx.strokeStyle = `hsla(${this.hue}, 100%, ${this.brightness}%, ${this.alpha})`;
+            } else {
+                ctx.strokeStyle = `hsla(${this.hue}, 100%, 60%, ${this.alpha})`;
+            }
+            ctx.stroke();
+        }
+    }
+
+    function createParticles(x, y, text, hue, type) {
+        if (text) {
+            let points = getTextPoints(text);
+            let isNumber = !isNaN(text);
+            if (particles.length > MAX_PARTICLES) return;
+            let limit = 6000; 
+            let step = Math.max(1, Math.ceil(points.length / limit));
+            for(let i=0; i<points.length; i+=step) {
+                particles.push(new Particle(x, y, hue, 'text', points[i].x, points[i].y, isNumber));
+            }
+        } else {
+            let count = 120;
+            while(count--) {
+                particles.push(new Particle(x, y, hue, type, 0, 0));
+            }
+        }
+    }
+
+    const setupScreen = document.getElementById('setup-screen');
+    const setupText = document.getElementById('setup-text');
+    const setupMusic = document.getElementById('setup-music');
+    const musicLabel = document.getElementById('music-label');
+    const startBtn = document.getElementById('start-btn');
+    const bgm = document.getElementById('bgm');
+
+    setupMusic.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            musicLabel.innerText = "✅ " + file.name;
+            bgm.src = URL.createObjectURL(file);
+        }
+    });
+
+    startBtn.addEventListener('click', () => {
+        initPlayList();
+        if (bgm.src) {
+            bgm.play().catch(e => console.log("Music play failed (interaction needed):", e));
+        }
+        setupScreen.classList.add('hidden');
+        isRunning = true;
+        document.getElementById('status').innerText = "✨ 正在播放: 新年烟花秀 2026 ✨";
+    });
+
+    window.showSetup = function() {
+        setupScreen.classList.remove('hidden');
+        isRunning = false; // 暂停烟花生成
+    };
+
+    window.replay = function() {
+        initPlayList();
+        fireworks = [];
+        document.getElementById('status').innerText = "✨ 重新播放 ✨";
+    };
+
+    function initPlayList() {
+        const rawText = setupText.value.trim();
+        currentIndex = 0;
+        isFinished = false;
+        if (rawText) {
+            let userList = rawText.split('\n').filter(t => t.trim() !== '');
+            if (isNaN(parseInt(userList[0]))) {
+                playList = SYSTEM_COUNTDOWN.concat(userList);
+            } else {
+                playList = userList;
+            }
+        } else {
+            playList = SYSTEM_COUNTDOWN.concat(DEFAULT_MSG);
+        }
+    }
+
+    function loop() {
+        requestAnimationFrame(loop);
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.fillStyle = `rgba(0, 0, 0, ${CONFIG.trail})`;
+        ctx.fillRect(0, 0, cw, ch);
+        ctx.globalCompositeOperation = 'lighter';
+
+        let i = fireworks.length;
+        while(i--) { fireworks[i].draw(); fireworks[i].update(i); }
+        let j = particles.length;
+        while(j--) { particles[j].draw(); particles[j].update(j); }
+
+        if (particles.length > MAX_PARTICLES) {
+            particles.splice(0, particles.length - MAX_PARTICLES);
+        }
+
+        if (!isRunning) return;
+
+        let now = Date.now();
+        tick++;
+        if (!isFinished) {
+            let waitTime = CONFIG.launchInterval;
+            if (currentIndex >= 10) waitTime += 900;
+
+            if (now - lastTextLaunchTime > waitTime) { 
+                if (currentIndex < playList.length) {
+                    let text = playList[currentIndex];
+                    fireworks.push(new Firework(text));
+                    currentIndex++;
+                    lastTextLaunchTime = now;
+                } else {
+                    isFinished = true;
+                }
+            }
+            if (tick >= CONFIG.ambienceInterval) {
+                fireworks.push(new Firework(null, random(cw * 0.05, cw * 0.15)));
+                fireworks.push(new Firework(null, random(cw * 0.85, cw * 0.95)));
+                if (Math.random() < 0.6) { 
+                    fireworks.push(new Firework(null, random(cw * 0.35, cw * 0.40)));
+                    fireworks.push(new Firework(null, random(cw * 0.60, cw * 0.65)));
+                }
+                tick = 0;
+            }
+        } else {
+            if (tick >= CONFIG.partyInterval) {
+                let count = Math.floor(random(2, 5));
+                for(let k=0; k<count; k++){
+                    fireworks.push(new Firework(null, undefined));
+                }
+                tick = 0;
+            }
+        }
+    }
+
+    loop();
+
+    // === 【修复】电脑/手机 通用交互支持 ===
+    // 增加鼠标点击和手指触摸监听，解决“电脑上点不动”的问题
+    
+    function handleInput(x, y) {
+        if (!isRunning) return; // 只有点击开始后才能互动
+        fireworks.push(new Firework(null, x)); // 在点击的X轴位置发射
+    }
+
+    canvas.addEventListener('mousedown', (e) => {
+        handleInput(e.clientX, e.clientY);
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        for (let i = 0; i < e.touches.length; i++) {
+            handleInput(e.touches[i].clientX, e.touches[i].clientY);
+        }
+    }, {passive: false});
+
+</script>
+</body>
+</html>
